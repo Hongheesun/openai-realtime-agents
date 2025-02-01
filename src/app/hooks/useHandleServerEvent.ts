@@ -4,6 +4,9 @@ import { ServerEvent, SessionStatus, AgentConfig } from "@/app/types";
 import { useTranscript } from "@/app/contexts/TranscriptContext";
 import { useEvent } from "@/app/contexts/EventContext";
 import { useRef } from "react";
+import usePostThread from "./usePostThread";
+import usePostMessage from "./usePostMessage";
+import usePostRunThread from "./usePostRunThread";
 
 export interface UseHandleServerEventParams {
   setSessionStatus: (status: SessionStatus) => void;
@@ -12,6 +15,8 @@ export interface UseHandleServerEventParams {
   sendClientEvent: (eventObj: any, eventNameSuffix?: string) => void;
   setSelectedAgentName: (name: string) => void;
   shouldForceResponse?: boolean;
+  assistantId?: string;
+  threadId?: string;
 }
 
 export function useHandleServerEvent({
@@ -20,6 +25,8 @@ export function useHandleServerEvent({
   selectedAgentConfigSet,
   sendClientEvent,
   setSelectedAgentName,
+  assistantId,
+  threadId,
 }: UseHandleServerEventParams) {
   const {
     transcriptItems,
@@ -30,6 +37,23 @@ export function useHandleServerEvent({
   } = useTranscript();
 
   const { logServerEvent } = useEvent();
+
+  const { mutate: postRunThread } = usePostRunThread();
+
+  const { mutate: postThread } = usePostThread({
+    onSuccess: (res: any) => {
+      localStorage.setItem("threadId", res.id);
+    },
+  });
+
+  const { mutate: postMessage } = usePostMessage({
+    // onSuccess: () => {
+    //   postRunThread({
+    //     thread_id: localStorage.getItem("threadId"),
+    //     assistant_id: "asst_4ZkF6de6XVsWeHpeY9nCQLpC",
+    //   });
+    // },
+  });
 
   const handleFunctionCall = async (functionCallParams: {
     name: string;
@@ -63,7 +87,8 @@ export function useHandleServerEvent({
     } else if (functionCallParams.name === "transferAgents") {
       const destinationAgent = args.destination_agent;
       const newAgentConfig =
-        selectedAgentConfigSet?.find((a) => a.name === destinationAgent) || null;
+        selectedAgentConfigSet?.find((a) => a.name === destinationAgent) ||
+        null;
       if (newAgentConfig) {
         setSelectedAgentName(destinationAgent);
       }
@@ -147,6 +172,23 @@ export function useHandleServerEvent({
             : serverEvent.transcript;
         if (itemId) {
           updateTranscriptMessage(itemId, finalTranscript, false);
+          console.log("user text ::: ", finalTranscript);
+          if (localStorage.getItem("threadId")) {
+            postMessage({
+              thread_id: localStorage.getItem("threadId"),
+              role: "user",
+              content: finalTranscript,
+            });
+          } else {
+            postThread({
+              messages: [
+                {
+                  role: "user",
+                  content: finalTranscript,
+                },
+              ],
+            });
+          }
         }
         break;
       }
@@ -175,6 +217,23 @@ export function useHandleServerEvent({
               });
             }
           });
+          if (localStorage.getItem("threadId")) {
+            postMessage({
+              thread_id: localStorage.getItem("threadId"),
+              role: "assistant",
+              content: serverEvent.response?.output[0].content[0].transcript,
+            });
+          } else {
+            postThread({
+              messages: [
+                {
+                  role: "assistant",
+                  content:
+                    serverEvent.response?.output[0].content[0].transcript,
+                },
+              ],
+            });
+          }
         }
         break;
       }

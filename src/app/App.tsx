@@ -19,6 +19,8 @@ import { useTranscript } from "@/app/contexts/TranscriptContext";
 import { useEvent } from "@/app/contexts/EventContext";
 import { useHandleServerEvent } from "./hooks/useHandleServerEvent";
 
+import { useGetAssistantList } from "./hooks/useGetAssistantList";
+
 // Utilities
 import { createRealtimeConnection } from "./lib/realtimeConnection";
 
@@ -33,8 +35,9 @@ function App() {
   const { logClientEvent, logServerEvent } = useEvent();
 
   const [selectedAgentName, setSelectedAgentName] = useState<string>("");
-  const [selectedAgentConfigSet, setSelectedAgentConfigSet] =
-    useState<AgentConfig[] | null>(null);
+  const [selectedAgentConfigSet, setSelectedAgentConfigSet] = useState<
+    AgentConfig[] | null
+  >(null);
 
   const [dataChannel, setDataChannel] = useState<RTCDataChannel | null>(null);
   const pcRef = useRef<RTCPeerConnection | null>(null);
@@ -50,6 +53,11 @@ function App() {
   const [isPTTUserSpeaking, setIsPTTUserSpeaking] = useState<boolean>(false);
   const [isAudioPlaybackEnabled, setIsAudioPlaybackEnabled] =
     useState<boolean>(true);
+
+  // const { data: assistantList } = useGetAssistantList({
+  //   order: "desc",
+  //   limit: "10",
+  // });
 
   const sendClientEvent = (eventObj: any, eventNameSuffix = "") => {
     if (dcRef.current && dcRef.current.readyState === "open") {
@@ -73,6 +81,8 @@ function App() {
     selectedAgentConfigSet,
     sendClientEvent,
     setSelectedAgentName,
+    // assistantId: assistantList[0].id,
+    // threadId,
   });
 
   useEffect(() => {
@@ -107,10 +117,7 @@ function App() {
       const currentAgent = selectedAgentConfigSet.find(
         (a) => a.name === selectedAgentName
       );
-      addTranscriptBreadcrumb(
-        `Agent: ${selectedAgentName}`,
-        currentAgent
-      );
+      addTranscriptBreadcrumb(`Agent: ${selectedAgentName}`, currentAgent);
       updateSession(true);
     }
   }, [selectedAgentConfigSet, selectedAgentName, sessionStatus]);
@@ -407,7 +414,10 @@ function App() {
     <div className="text-base flex flex-col h-screen bg-gray-100 text-gray-800 relative">
       <div className="p-5 text-lg font-semibold flex justify-between items-center">
         <div className="flex items-center">
-          <div onClick={() => window.location.reload()} style={{ cursor: 'pointer' }}>
+          <div
+            onClick={() => window.location.reload()}
+            style={{ cursor: "pointer" }}
+          >
             <Image
               src="/openai-logomark.svg"
               alt="OpenAI Logo"
@@ -458,7 +468,7 @@ function App() {
                   onChange={handleSelectedAgentChange}
                   className="appearance-none border border-gray-300 rounded-lg text-base px-2 py-1 pr-8 cursor-pointer font-normal focus:outline-none"
                 >
-                  {selectedAgentConfigSet?.map(agent => (
+                  {selectedAgentConfigSet?.map((agent) => (
                     <option key={agent.name} value={agent.name}>
                       {agent.name}
                     </option>
