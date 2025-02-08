@@ -4,9 +4,9 @@ import { ServerEvent, SessionStatus, AgentConfig } from "@/app/types";
 import { useTranscript } from "@/app/contexts/TranscriptContext";
 import { useEvent } from "@/app/contexts/EventContext";
 import { useRef } from "react";
-import usePostThread from "./usePostThread";
-import usePostMessage from "./usePostMessage";
-import usePostRunThread from "./usePostRunThread";
+// import usePostThread from "./usePostThread";
+// import usePostMessage from "./usePostMessage";
+// import usePostRunThread from "./usePostRunThread";
 
 export interface UseHandleServerEventParams {
   setSessionStatus: (status: SessionStatus) => void;
@@ -25,8 +25,6 @@ export function useHandleServerEvent({
   selectedAgentConfigSet,
   sendClientEvent,
   setSelectedAgentName,
-  assistantId,
-  threadId,
 }: UseHandleServerEventParams) {
   const {
     transcriptItems,
@@ -38,22 +36,22 @@ export function useHandleServerEvent({
 
   const { logServerEvent } = useEvent();
 
-  const { mutate: postRunThread } = usePostRunThread();
+  // const { mutate: postRunThread } = usePostRunThread();
 
-  const { mutate: postThread } = usePostThread({
-    onSuccess: (res: any) => {
-      localStorage.setItem("threadId", res.id);
-    },
-  });
+  // const { mutate: postThread } = usePostThread({
+  //   onSuccess: (res: any) => {
+  //     localStorage.setItem("threadId", res.id);
+  //   },
+  // });
 
-  const { mutate: postMessage } = usePostMessage({
-    // onSuccess: () => {
-    //   postRunThread({
-    //     thread_id: localStorage.getItem("threadId"),
-    //     assistant_id: "asst_4ZkF6de6XVsWeHpeY9nCQLpC",
-    //   });
-    // },
-  });
+  // const { mutate: postMessage } = usePostMessage({
+  //   // onSuccess: () => {
+  //   //   postRunThread({
+  //   //     thread_id: localStorage.getItem("threadId"),
+  //   //     assistant_id: "asst_4ZkF6de6XVsWeHpeY9nCQLpC",
+  //   //   });
+  //   // },
+  // });
 
   const handleFunctionCall = async (functionCallParams: {
     name: string;
@@ -68,6 +66,7 @@ export function useHandleServerEvent({
     addTranscriptBreadcrumb(`function call: ${functionCallParams.name}`, args);
 
     if (currentAgent?.toolLogic?.[functionCallParams.name]) {
+      console.log("1");
       const fn = currentAgent.toolLogic[functionCallParams.name];
       const fnResult = await fn(args, transcriptItems);
       addTranscriptBreadcrumb(
@@ -85,6 +84,8 @@ export function useHandleServerEvent({
       });
       sendClientEvent({ type: "response.create" });
     } else if (functionCallParams.name === "transferAgents") {
+      console.log("2");
+
       const destinationAgent = args.destination_agent;
       const newAgentConfig =
         selectedAgentConfigSet?.find((a) => a.name === destinationAgent) ||
@@ -109,6 +110,8 @@ export function useHandleServerEvent({
         functionCallOutput
       );
     } else {
+      console.log("3");
+
       const simulatedResult = { result: true };
       addTranscriptBreadcrumb(
         `function call fallback: ${functionCallParams.name}`,
@@ -173,22 +176,22 @@ export function useHandleServerEvent({
         if (itemId) {
           updateTranscriptMessage(itemId, finalTranscript, false);
           console.log("user text ::: ", finalTranscript);
-          if (localStorage.getItem("threadId")) {
-            postMessage({
-              thread_id: localStorage.getItem("threadId"),
-              role: "user",
-              content: finalTranscript,
-            });
-          } else {
-            postThread({
-              messages: [
-                {
-                  role: "user",
-                  content: finalTranscript,
-                },
-              ],
-            });
-          }
+          // if (localStorage.getItem("threadId")) {
+          //   postMessage({
+          //     thread_id: localStorage.getItem("threadId"),
+          //     role: "user",
+          //     content: finalTranscript,
+          //   });
+          // } else {
+          //   postThread({
+          //     messages: [
+          //       {
+          //         role: "user",
+          //         content: finalTranscript,
+          //       },
+          //     ],
+          //   });
+          // }
         }
         break;
       }

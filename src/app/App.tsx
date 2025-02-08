@@ -8,7 +8,6 @@ import Image from "next/image";
 
 // UI components
 import Transcript from "./components/Transcript";
-import Events from "./components/Events";
 import BottomToolbar from "./components/BottomToolbar";
 
 // Types
@@ -18,8 +17,6 @@ import { AgentConfig, SessionStatus } from "@/app/types";
 import { useTranscript } from "@/app/contexts/TranscriptContext";
 import { useEvent } from "@/app/contexts/EventContext";
 import { useHandleServerEvent } from "./hooks/useHandleServerEvent";
-
-import { useGetAssistantList } from "./hooks/useGetAssistantList";
 
 // Utilities
 import { createRealtimeConnection } from "./lib/realtimeConnection";
@@ -98,6 +95,8 @@ function App() {
     const agents = allAgentSets[finalAgentConfig];
     const agentKeyToUse = agents[0]?.name || "";
 
+    console.log(agents[0]?.name);
+
     setSelectedAgentName(agentKeyToUse);
     setSelectedAgentConfigSet(agents);
   }, [searchParams]);
@@ -134,7 +133,10 @@ function App() {
   const fetchEphemeralKey = async (): Promise<string | null> => {
     logClientEvent({ url: "/session" }, "fetch_session_token_request");
     const tokenResponse = await fetch("/api/session");
+    console.log("tokenResponse ::: ", tokenResponse);
     const data = await tokenResponse.json();
+    console.log("data ::: ", data);
+
     logServerEvent(data, "fetch_session_token_response");
 
     if (!data.client_secret?.value) {
@@ -350,19 +352,19 @@ function App() {
     }
   };
 
-  const handleAgentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newAgentConfig = e.target.value;
-    const url = new URL(window.location.toString());
-    url.searchParams.set("agentConfig", newAgentConfig);
-    window.location.replace(url.toString());
-  };
+  // const handleAgentChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+  //   const newAgentConfig = e.target.value;
+  //   const url = new URL(window.location.toString());
+  //   url.searchParams.set("agentConfig", newAgentConfig);
+  //   window.location.replace(url.toString());
+  // };
 
-  const handleSelectedAgentChange = (
-    e: React.ChangeEvent<HTMLSelectElement>
-  ) => {
-    const newAgentName = e.target.value;
-    setSelectedAgentName(newAgentName);
-  };
+  // const handleSelectedAgentChange = (
+  //   e: React.ChangeEvent<HTMLSelectElement>
+  // ) => {
+  //   const newAgentName = e.target.value;
+  //   setSelectedAgentName(newAgentName);
+  // };
 
   useEffect(() => {
     const storedPushToTalkUI = localStorage.getItem("pushToTalkUI");
@@ -408,7 +410,7 @@ function App() {
     }
   }, [isAudioPlaybackEnabled]);
 
-  const agentSetKey = searchParams.get("agentConfig") || "default";
+  // const agentSetKey = searchParams.get("agentConfig") || "default";
 
   return (
     <div className="text-base flex flex-col h-screen bg-gray-100 text-gray-800 relative">
@@ -435,7 +437,7 @@ function App() {
             Scenario
           </label>
           <div className="relative inline-block">
-            <select
+            {/* <select
               value={agentSetKey}
               onChange={handleAgentChange}
               className="appearance-none border border-gray-300 rounded-lg text-base px-2 py-1 pr-8 cursor-pointer font-normal focus:outline-none"
@@ -445,7 +447,7 @@ function App() {
                   {agentKey}
                 </option>
               ))}
-            </select>
+            </select> */}
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2 text-gray-600">
               <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                 <path
@@ -456,7 +458,7 @@ function App() {
               </svg>
             </div>
           </div>
-
+          {/* 
           {agentSetKey && (
             <div className="flex items-center ml-6">
               <label className="flex items-center text-base gap-1 mr-2 font-medium">
@@ -489,7 +491,7 @@ function App() {
                 </div>
               </div>
             </div>
-          )}
+          )} */}
         </div>
       </div>
 
@@ -504,7 +506,7 @@ function App() {
           }
         />
 
-        <Events isExpanded={isEventsPaneExpanded} />
+        {/* <Events isExpanded={isEventsPaneExpanded} /> */}
       </div>
 
       <BottomToolbar
